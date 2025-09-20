@@ -11,6 +11,8 @@ Features of Learnix include:
 
 Login & Signup system using PHP and MySQL
 
+Frontend: HTML, CSS, JavaScript, Bootstrap  
+
 Profile Dashboard to view and continue enrolled courses
 
 Explore and enroll in free courses
