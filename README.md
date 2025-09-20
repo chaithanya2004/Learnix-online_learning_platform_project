@@ -1,5 +1,6 @@
  📘 Learnix – E-Learning Platform
  
+ 
 Our Learnix E-Learning Website provides everything a student needs to learn effectively:
 Online Courses, Quizzes, Progress Tracking, and Certificates. Students can enroll in free courses, track their progress, and earn certificates after completion.
 
@@ -25,4 +26,6 @@ Certificate generation after finishing courses
 
 Responsive website design for mobile, tablet, and desktop
 
+
 It is a fully responsive website built to provide a smooth learning experience. 
+
