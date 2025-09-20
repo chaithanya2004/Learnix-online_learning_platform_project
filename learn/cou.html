@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Learnix Course</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #6a11cb, #2575fc);
+    }
+    .sidebar {
+      background: #343a40;
+      color: white;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    .section-title {
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+      background-color: #495057;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .lessons {
+      display: none;
+      margin-left: 10px;
+    }
+    .lesson {
+      padding: 8px 12px;
+      cursor: pointer;
+      border-radius: 5px;
+      margin: 4px 0;
+    }
+    .lesson:hover { background-color: #6c757d; }
+    .lesson.completed { background-color: #198754; }
+    iframe {
+      width: 100%;
+      height: 500px;
+      border: none;
+      border-radius: 8px;
+    }
+    .progress-bar-container {
+      margin-bottom: 20px;
+    }
+    .badge-box {
+      margin-top: 20px;
+      padding: 15px;
+      background: #28a745;
+      color: white;
+      border-radius: 10px;
+      text-align: center;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container-fluid">
+  <div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-4 sidebar">
+      <a href="profile.html" class="text-white d-block mb-3">&larr; Back to Dashboard</a>
+      <h3 id="courseTitle">Course</h3>
+      <div class="progress-bar-container">
+        <div class="progress">
+          <div id="progressFill" class="progress-bar" role="progressbar" style="width: 0%">0%</div>
+        </div>
+      </div>
+      <div id="sections"></div>
+      <div id="badge" class="badge-box">
+        🎉 Congrats! You’ve completed the course.
+      </div>
+    </div>
+    <!-- Main content -->
+    <div class="col-md-8 p-4">
+      <iframe id="lessonVideo" src="" allowfullscreen></iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+const courseId = new URLSearchParams(window.location.search).get("course");
+
+const allCourses = {
+  "web-dev": {
+    title: "Web Development",
+    sections: [
+      {
+        name: "Basics",
+        lessons: [
+          { title: "Intro to HTML", video: "https://www.youtube.com/embed/UB1O30fR-EE" },
+          { title: "Intro to CSS", video: "https://www.youtube.com/embed/yfoY53QXEnI" },
+          { title: "Intro to JavaScript", video: "https://www.youtube.com/embed/W6NZfCO5SIk" }
+        ]
+      }
+    ]
+  },
+  "data-structures": {
+    title: "Data Structures",
+    sections: [
+      {
+        name: "Core Concepts",
+        lessons: [
+          { title: "Arrays", video: "https://www.youtube.com/embed/1Q0MdXk2g6k" },
+          { title: "Stacks", video: "https://www.youtube.com/embed/F1F2imiOJfk" }
+        ]
+      }
+    ]
+  },
+  "python": {
+    title: "Python Programming",
+    sections: [
+      {
+        name: "Basics",
+        lessons: [
+          { title: "Python Syntax", video: "https://www.youtube.com/embed/rfscVS0vtbw" },
+          { title: "Variables", video: "https://www.youtube.com/embed/kqtD5dpn9C8" }
+        ]
+      }
+    ]
+  },
+  "react": {
+    title: "React JS",
+    sections: [
+      {
+        name: "React Intro",
+        lessons: [
+          { title: "React Basics", video: "https://www.youtube.com/embed/bMknfKXIFA8" }
+        ]
+      }
+    ]
+  },
+  "node": {
+    title: "Node.js & Express",
+    sections: [
+      {
+        name: "Node Intro",
+        lessons: [
+          { title: "Node & Express", video: "https://www.youtube.com/embed/Oe421EPjeBE" }
+        ]
+      }
+    ]
+  },
+  "mongodb": {
+    title: "MongoDB",
+    sections: [
+      {
+        name: "Mongo Intro",
+        lessons: [
+          { title: "MongoDB Basics", video: "https://www.youtube.com/embed/8gNrZ4lAnAw" }
+        ]
+      }
+    ]
+  },
+  "sql": {
+    title: "SQL & MySQL",
+    sections: [
+      {
+        name: "SQL Basics",
+        lessons: [
+          { title: "SQL Tutorial", video: "https://www.youtube.com/embed/HXV3zeQKqGY" }
+        ]
+      }
+    ]
+  },
+  "ai": {
+    title: "Artificial Intelligence",
+    sections: [
+      {
+        name: "AI Basics",
+        lessons: [
+          { title: "Intro to AI", video: "https://www.youtube.com/embed/2ePf9rue1Ao" }
+        ]
+      }
+    ]
+  },
+  "git": {
+    title: "Git & GitHub",
+    sections: [
+      {
+        name: "Git Essentials",
+        lessons: [
+          { title: "Git & GitHub", video: "https://www.youtube.com/embed/apGV9Kg7ics" }
+        ]
+      }
+    ]
+  }
+};
+
+if (!courseId || !allCourses[courseId]) {
+  document.body.innerHTML = `<h2 class='text-center text-danger mt-5'>⚠️ Invalid Course ID</h2>`;
+} else {
+  const course = allCourses[courseId];
+  document.getElementById("courseTitle").innerText = course.title;
+
+  const sectionDiv = document.getElementById("sections");
+  const videoPlayer = document.getElementById("lessonVideo");
+  let total = 0;
+  let done = 0;
+  let firstVideoLoaded = false;
+
+ course.sections.forEach((section, sIndex) => {
+  const sectionDiv = document.createElement("div");
+  const sectionTitle = document.createElement("h3");
+  sectionTitle.textContent = section.name;
+
+  const lessonBox = document.createElement("div");
+  lessonBox.className = "lesson-box";
+
+  section.lessons.forEach((lesson, lIndex) => {
+    const l = document.createElement("div");
+    l.textContent = lesson.title;
+    l.className = "lesson";
+
+    // Onclick: handle video + progress
+    l.onclick = () => {
+      videoPlayer.src = `https://www.youtube.com/embed/${lesson.video}`;
+      if (!l.classList.contains("completed")) {
+        l.classList.add("completed");
+        markLessonComplete(courseId, globalLessonIndex);
+      }
+      updateProgressBar();
+    };
+
+    lessonBox.appendChild(l);
+    globalLessonIndex++;  // ✅ INSERT THIS HERE
+  });
+
+  sectionDiv.appendChild(sectionTitle);
+  sectionDiv.appendChild(lessonBox);
+  courseContainer.appendChild(sectionDiv);
+});
+
+function markLessonComplete(courseId, lessonIndex) {
+  const progressData = JSON.parse(localStorage.getItem("courseProgress")) || {};
+  const completedLessons = progressData[courseId] || [];
+
+  if (!completedLessons.includes(lessonIndex)) {
+    completedLessons.push(lessonIndex);
+    progressData[courseId] = completedLessons;
+    localStorage.setItem("courseProgress", JSON.stringify(progressData));
+  }
+}
+function updateProgressBar() {
+  const progressData = JSON.parse(localStorage.getItem("courseProgress")) || {};
+  const completed = progressData[courseId] || [];
+  const totalLessons = course.sections.reduce((sum, sec) => sum + sec.lessons.length, 0);
+  const percent = Math.round((completed.length / totalLessons) * 100);
+
+  document.getElementById("progressFill").style.width = percent + "%";
+  document.getElementById("progressFill").innerText = percent + "%";
+
+  if (percent === 100) {
+    document.getElementById("badge").style.display = "block";
+  }
+}
+
+
+}
+</script>
+</body>
+</html>
