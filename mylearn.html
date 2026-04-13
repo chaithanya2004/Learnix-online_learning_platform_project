@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Learning - Learnix</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #4280d0;
+    }
+
+    header {
+      background-color: #1f2937;
+      color: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .nav-links a {
+      color: white;
+      margin-left: 20px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    h2 {
+      padding: 20px 30px 10px;
+      font-size: 26px;
+    }
+
+    .courses-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 0 30px 30px;
+    }
+
+    .course-card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      width: 300px;
+      padding: 20px;
+      position: relative;
+    }
+
+    .course-card h3 {
+      margin-top: 0;
+    }
+
+    .progress-bar {
+      background-color: #e0e0e0;
+      border-radius: 20px;
+      overflow: hidden;
+      height: 15px;
+      margin: 10px 0;
+    }
+
+    .progress {
+      height: 100%;
+      background-color: #10b981;
+      width: 0%;
+    }
+
+    .continue-btn {
+      background-color: #3b82f6;
+      color: white;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .no-courses {
+      padding: 30px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Learnix - My Learning</h1>
+  <div class="nav-links">
+    <a href="profile.html">Home</a>
+    <a href="#" onclick="logout()">Logout</a>
+  </div>
+</header>
+
+<h2>Your Enrolled Courses</h2>
+<div class="courses-container" id="courseList">
+  <!-- Courses will be loaded here -->
+</div>
+
+<div class="no-courses" id="noCourses" style="display: none;">
+  You haven’t enrolled in any courses yet.
+</div>
+
+<script>
+  const allCourses = {
+    "web-dev": { title: "Web Development" },
+    "python": { title: "Python for Beginners" },
+    "react": { title: "React Fundamentals" },
+    "nodejs": { title: "Node.js Crash Course" },
+    "mongodb": { title: "MongoDB Basics" },
+    "sql": { title: "SQL & Databases" },
+    "ai": { title: "Introduction to AI" },
+    "git": { title: "Mastering Git & GitHub" }
+  };
+
+  const enrolled = JSON.parse(localStorage.getItem("enrolledCourses")) || [];
+  const progressData = JSON.parse(localStorage.getItem("courseProgress")) || {};
+  const courseList = document.getElementById("courseList");
+  const noCourses = document.getElementById("noCourses");
+
+  if (enrolled.length === 0) {
+    noCourses.style.display = "block";
+  } else {
+    enrolled.forEach(courseId => {
+      const course = allCourses[courseId];
+      if (!course) return;
+
+      const progress = Math.floor(progressData[courseId] || 0);
+
+      const card = document.createElement("div");
+      card.className = "course-card";
+      card.innerHTML = `
+        <h3>${course.title}</h3>
+        <div class="progress-bar">
+          <div class="progress" style="width: ${progress}%;"></div>
+        </div>
+        <p>${progress}% completed</p>
+        <button class="continue-btn" onclick="continueCourse('${courseId}')">Continue Learning</button>
+      `;
+      courseList.appendChild(card);
+    });
+  }
+
+  function continueCourse(courseId) {
+    window.location.href = `cou.html?course=${courseId}`;
+  }
+
+  function logout() {
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = "login.html";
+  }
+</script>
+
+</body>
+</html>

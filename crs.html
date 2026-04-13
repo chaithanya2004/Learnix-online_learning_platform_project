@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Learnix Course</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #6a11cb, #2575fc);
+    }
+    .sidebar {
+      background: #343a40;
+      color: white;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    .section-title {
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+      background-color: #495057;
+      padding: 10px;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+    .section-title:hover { background-color: #6c757d; }
+    .lessons { display: none; margin-left: 10px; }
+    .lesson {
+      padding: 8px 12px;
+      cursor: pointer;
+      border-radius: 5px;
+      margin: 4px 0;
+      transition: background-color 0.3s;
+    }
+    .lesson:hover { background-color: #6c757d; }
+    .lesson.completed { background-color: #198754; color: white; }
+    iframe { width: 100%; height: 500px; border: none; border-radius: 8px; }
+    .progress-bar-container { margin-bottom: 20px; }
+    .badge-box {
+      margin-top: 20px;
+      padding: 15px;
+      background: #28a745;
+      color: white;
+      border-radius: 10px;
+      text-align: center;
+      display: none;
+    }
+    .certificate-btn { margin-top: 10px; display: none; }
+  </style>
+</head>
+<body>
+<div class="container-fluid">
+  <div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-4 sidebar">
+      <a href="profile.html" class="text-white d-block mb-3">&larr; Back to Dashboard</a>
+      <h3 id="courseTitle">Course</h3>
+      <div class="progress-bar-container">
+        <div class="progress">
+          <div id="progressFill" class="progress-bar" role="progressbar" style="width: 0%">0%</div>
+        </div>
+      </div>
+      <div id="sections"></div>
+      <div id="badge" class="badge-box">
+        🎉 Congrats! You’ve completed the course!
+        <div><button id="downloadCert" class="btn btn-primary">Download Certificate</button>
+</div>
+      </div>
+    </div>
+    <!-- Main content -->
+    <div class="col-md-8 p-4">
+      <div id="player"></div>
+    </div>
+  </div>
+</div>
+<!-- Certificate Section (initially hidden) -->
+<div id="certificate-container" style="display: none; text-align: center; margin-top: 30px;">
+  <canvas id="certificateCanvas" width="800" height="600" style="border: 1px solid #ccc;"></canvas>
+  <br />
+  <a id="downloadCertificate" style="display: none;" class="btn btn-success">Click to Download</a>
+</div>
+
+
+<script>
+const courseId = new URLSearchParams(window.location.search).get("course");
+const allCourses = {
+  "web-dev": {
+    title: "Web Development",
+    sections: [
+      {
+        name: "Basics",
+        lessons: [
+          { title: "Intro to HTML", video: "UB1O30fR-EE" },
+          { title: "Intro to CSS", video: "yfoY53QXEnI" },
+          { title: "Intro to JavaScript", video: "W6NZfCO5SIk" }
+        ]
+      }
+    ]
+  },
+  "data-structures": {
+    title: "Data Structures",
+    sections: [
+      {
+        name: "Introduction",
+        lessons: [
+          { title: "What are Data Structures?", video: "WqDvLBOaWXY" },
+          { title: "Types of Data Structures", video: "BBpAmxU_NQo" }
+        ]
+      },
+      {
+        name: "Common Structures",
+        lessons: [
+          { title: "Arrays", video: "Ew6AXJjA3XU" },
+          { title: "Linked Lists", video: "njTh_OwMljA" }
+        ]
+      }
+    ]
+  },
+  "python": {
+    title: "Python Programming",
+    sections: [
+      {
+        name: "Getting Started",
+        lessons: [
+          { title: "Python Introduction", video: "rfscVS0vtbw" },
+          { title: "Installing Python", video: "YYXdXT2l-Gg" }
+        ]
+      },
+      {
+        name: "Core Concepts",
+        lessons: [
+          { title: "Loops and Functions", video: "sh7Y8h3Tw_c" },
+          { title: "Object-Oriented Python", video: "Ej_02ICOIgs" }
+        ]
+      }
+    ]
+  },
+  "react": {
+    title: "React JS",
+    sections: [
+      {
+        name: "Basics",
+        lessons: [
+          { title: "What is React?", video: "bMknfKXIFA8" },
+          { title: "JSX & Components", video: "cDPOLK9Lks8" }
+        ]
+      },
+      {
+        name: "Advanced",
+        lessons: [
+          { title: "Hooks", video: "dpw9EHDh2bM" },
+          { title: "React Router", video: "Law7wfdg_ls" }
+        ]
+      }
+    ]
+  },
+  "node": {
+    title: "Node.js & Express",
+    sections: [
+      {
+        name: "Introduction",
+        lessons: [
+          { title: "Node.js Crash Course", video: "Oe421EPjeBE" },
+          { title: "Installing Node", video: "ENrzD9HAZK4" }
+        ]
+      },
+      {
+        name: "Express Basics",
+        lessons: [
+          { title: "Routing", video: "pKd0Rpw7O48" },
+          { title: "Middleware", video: "L72fhGm1tfE" }
+        ]
+      }
+    ]
+  },
+  "mongodb": {
+    title: "MongoDB",
+    sections: [
+      {
+        name: "NoSQL Basics",
+        lessons: [
+          { title: "Intro to MongoDB", video: "8gNrZ4lAnAw" },
+          { title: "CRUD Operations", video: "ofme2o29ngU" }
+        ]
+      },
+      {
+        name: "Advanced MongoDB",
+        lessons: [
+          { title: "Aggregation Framework", video: "YBd0HHStv9U" },
+          { title: "Indexes", video: "DNL5T0G0eFA" }
+        ]
+      }
+    ]
+  },
+  "sql": {
+    title: "SQL & MySQL",
+    sections: [
+      {
+        name: "Basics",
+        lessons: [
+          { title: "SQL Introduction", video: "HXV3zeQKqGY" },
+          { title: "SELECT & WHERE", video: "z1PpGF6r3hY" }
+        ]
+      },
+      {
+        name: "Advanced",
+        lessons: [
+          { title: "Joins", video: "ReD4oXLQ7Kg" },
+          { title: "Normalization", video: "fFVZt-6sgyo" }
+        ]
+      }
+    ]
+  },
+  "ai": {
+    title: "Artificial Intelligence",
+    sections: [
+      {
+        name: "Introduction",
+        lessons: [
+          { title: "What is AI?", video: "2ePf9rue1Ao" },
+          { title: "Applications of AI", video: "JMUxmLyrhSk" }
+        ]
+      },
+      {
+        name: "Machine Learning",
+        lessons: [
+          { title: "Supervised Learning", video: "Gv9_4yMHFhI" },
+          { title: "Unsupervised Learning", video: "x2k4P5RMhvE" }
+        ]
+      }
+    ]
+  },
+  "git": {
+    title: "Git & GitHub",
+    sections: [
+      {
+        name: "Basics",
+        lessons: [
+          { title: "Intro to Git", video: "apGV9Kg7ics" },
+          { title: "Git Commands", video: "tFBH7EZJWjE" }
+        ]
+      },
+      {
+        name: "GitHub",
+        lessons: [
+          { title: "Pushing to GitHub", video: "RGOj5yH7evk" },
+          { title: "Pull Requests", video: "rgbCcBNZcdQ" }
+        ]
+      }
+    ]
+  }
+  }
+;
+
+if (!courseId || !allCourses[courseId]) {
+  document.body.innerHTML = `<h2 class='text-center text-danger mt-5'>⚠️ Invalid Course ID</h2>`;
+} else {
+  const course = allCourses[courseId];
+  const sectionDiv = document.getElementById("sections");
+  const progressData = JSON.parse(localStorage.getItem("progress") || "{}");
+  const userProgress = progressData[courseId] || { completed: [] };
+
+  let player;
+  let currentLessonTitle = "";
+  let lessonMap = {}; // title -> {element, videoId}
+  let totalLessons = 0;
+
+  document.getElementById("courseTitle").innerText = course.title;
+
+ function updateProgressUI() {
+  const done = userProgress.completed.length;
+  const percent = Math.round((done / totalLessons) * 100);
+  const fill = document.getElementById("progressFill");
+  fill.style.width = percent + "%";
+  fill.innerText = percent + "%";
+
+  if (percent === 100) {
+    document.getElementById("badge").style.display = "block";
+    document.getElementById("downloadCert").style.display = "inline-block";
+    checkAndShowCertificate(); // ✅ call it here!
+  }
+}
+
+
+  course.sections.forEach(section => {
+    const sectionTitle = document.createElement("div");
+    sectionTitle.className = "section-title";
+    sectionTitle.innerText = section.name;
+
+    const lessonBox = document.createElement("div");
+    lessonBox.className = "lessons";
+
+    sectionTitle.onclick = () => {
+      lessonBox.style.display = lessonBox.style.display === "block" ? "none" : "block";
+    };
+
+    section.lessons.forEach(lesson => {
+      totalLessons++;
+      const l = document.createElement("div");
+      l.className = "lesson";
+      l.innerText = lesson.title;
+      if (userProgress.completed.includes(lesson.title)) l.classList.add("completed");
+
+      lessonMap[lesson.title] = { element: l, videoId: lesson.video };
+
+      l.onclick = () => {
+        currentLessonTitle = lesson.title;
+        player.loadVideoById(lesson.video);
+      };
+
+      lessonBox.appendChild(l);
+    });
+
+    sectionDiv.appendChild(sectionTitle);
+    sectionDiv.appendChild(lessonBox);
+  });
+
+  updateProgressUI();
+
+  window.onYouTubeIframeAPIReady = function () {
+    player = new YT.Player("player", {
+      height: "500",
+      width: "100%",
+      videoId: course.sections[0].lessons[0].video,
+      events: {
+        onStateChange: onPlayerStateChange
+      }
+    });
+    currentLessonTitle = course.sections[0].lessons[0].title;
+  };
+
+  function onPlayerStateChange(event) {
+    if (event.data === YT.PlayerState.ENDED) {
+      if (!userProgress.completed.includes(currentLessonTitle)) {
+        userProgress.completed.push(currentLessonTitle);
+        lessonMap[currentLessonTitle].element.classList.add("completed");
+        progressData[courseId] = userProgress;
+        localStorage.setItem("progress", JSON.stringify(progressData));
+        updateProgressUI();
+      }
+    }
+  }
+
+function checkAndShowCertificate() {
+  const done = userProgress.completed.length;
+  const percent = Math.round((done / totalLessons) * 100);
+
+  if (percent === 100) {
+    document.getElementById("badge").style.display = "block";
+    generateCertificate("chaith", course.title); // Replace with dynamic user if needed
+  }
+}
+function generateCertificate(name, courseTitle) {
+  const canvas = document.getElementById("certificateCanvas");
+  const ctx = canvas.getContext("2d");
+
+  const bgImage = new Image();
+  bgImage.src = "cert.png"; // ✅ Make sure image exists
+
+ bgImage.onload = () => {
+  ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.textAlign = "center";
+
+  // Name
+  ctx.font = "bold 50px Arial";
+  ctx.fillText(name, canvas.width / 2, 270);
+
+  // Course Title
+  ctx.font = "bold 45px Arial";
+  ctx.fillText(courseTitle, canvas.width / 2, 520);
+  ctx.font = "24px Arial";
+  ctx.fillText("for successfully completed", canvas.width / 2, 470);
+
+  // Date
+  const date = new Date().toLocaleDateString();
+  ctx.font = "20px Arial";
+  ctx.fillText("Date: " + date, canvas.width / 2, 570);
+
+  // Show certificate
+  document.getElementById("certificate-container").style.display = "block";
+
+  // ✅ Set download attributes
+  const downloadLink = document.getElementById("downloadCertificate");
+  downloadLink.href = canvas.toDataURL("image/png");
+  downloadLink.download = `${name}-certificate.png`;
+  downloadLink.style.display = "inline-block";
+};
+}
+
+// 📌 Handle button click
+document.getElementById("downloadCert").addEventListener("click", () => {
+  const name = prompt("Enter your full name for the certificate:");
+  if (!name || name.trim() === "") {
+    alert("Name is required.");
+    return;
+  }
+
+  const courseId = new URLSearchParams(window.location.search).get("course");
+  const courseData = allCourses[courseId]; // ✅ Fixed variable name
+  const courseTitle = courseData ? courseData.title : "Your Course";
+
+  generateCertificate(name.trim(), courseTitle);
+
+  // Scroll to certificate section
+  document.getElementById("certificate-container").scrollIntoView({ behavior: "smooth" });
+});
+}
+</script>
+</body>
+</html>
